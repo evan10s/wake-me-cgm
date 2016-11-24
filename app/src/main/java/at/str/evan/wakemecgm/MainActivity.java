@@ -12,6 +12,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessagingService;
+
 import org.json.JSONArray;
 
 import java.io.BufferedReader;
@@ -28,10 +31,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        FirebaseInstanceId.getInstance().getToken();
         final Button startServiceBtn = (Button) findViewById(R.id.start_service);
         startServiceBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
+                Log.d("WAKEMECGM",FirebaseInstanceId.getInstance().getToken());
                 final EditText ipAdrField = (EditText) findViewById(R.id.enter_ip_adr);
                 String ipAdr = ipAdrField.getText().toString(); //trim is not necessarily because input doesn't allow spaces
                 makeNetworkRequest(ipAdr);
