@@ -11,30 +11,20 @@
     tools:context="at.str.evan.wakemecgm.MainActivity">
 
     <TextView
+        android:text="Waiting for data..."
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/enterIPdirections"
-        android:text="@string/enter_server_ip_directions"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="11dp"
+        android:id="@+id/bg"
         android:textAppearance="@android:style/TextAppearance.Material.Medium" />
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:layout_below="@+id/enterIPdirections"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="17dp"
-        android:id="@+id/enter_ip_adr"
-        android:hint="@string/server_ip_address"
-        android:inputType="numberDecimal"
-        android:digits="0123456789."/>
-
     <Button
-        android:text="@string/start_service"
+        android:text="Confirm Alert"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/enter_ip_adr"
-        android:layout_alignParentStart="true"
-        android:id="@+id/start_service" />
-
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/confirm_alert" />
 </RelativeLayout>

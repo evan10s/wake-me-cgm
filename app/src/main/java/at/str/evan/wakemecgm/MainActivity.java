@@ -32,15 +32,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         FirebaseInstanceId.getInstance().getToken();
-        final Button startServiceBtn = (Button) findViewById(R.id.start_service);
+        /*final Button startServiceBtn = (Button) findViewById(R.id.start_service);
         startServiceBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
                 Log.d("WAKEMECGM",FirebaseInstanceId.getInstance().getToken());
                 final EditText ipAdrField = (EditText) findViewById(R.id.enter_ip_adr);
-                String ipAdr = ipAdrField.getText().toString(); //trim is not necessarily because input doesn't allow spaces
+                String ipAdr = ipAdrField.getText().toString(); //trim is not necessary because input doesn't allow spaces
                 makeNetworkRequest(ipAdr);
             }
+        });*/
+        final Button confirmAlertBtn = (Button) findViewById(R.id.confirm_alert);
+        confirmAlertBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick (View v) {
+                BgUpdateService.runningAlert.interrupt();
+            }
         });
+
     }
 
     public void makeNetworkRequest(String ip) {

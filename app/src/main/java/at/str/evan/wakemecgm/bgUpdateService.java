@@ -6,8 +6,11 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -17,6 +20,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
 
 public class BgUpdateService extends FirebaseMessagingService {
+    public static Thread runningAlert;
     public BgUpdateService() {
     }
 
@@ -30,11 +34,40 @@ public class BgUpdateService extends FirebaseMessagingService {
         //vibrate.vibrate(300);
         Log.d("WAKEMECGM", remoteMessage.getData().toString());
 
+        //startAlertService();
+        /*MediaPlayer mp = MediaPlayer.create(this,R.raw.lowAlert);
+        mp.setLooping(false);
+        mp.start();*/
+
+
+
         Map<String, String> msgData = remoteMessage.getData();
         int bg = Integer.parseInt(msgData.get("latest_bg"));
         String trendVal = msgData.get("trend");
         String trendSymbol = "";
 
+        Runnable alertSound = new Runnable() {
+            @Override
+            public void run() {
+                Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.lowalert));
+                Log.d("wakemecgm","running");
+                while(!Thread.interrupted()) {
+                    ringtone.play();
+                    try {
+                        Thread.sleep(4500);
+                    } catch (InterruptedException e) {
+                        ringtone.stop();
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+
+        };
+        runningAlert = new Thread (alertSound);
+        if (bg <= 65) {
+            runningAlert.start();
+        }
         switch (trendVal) {
             case "FLAT":
                 trendSymbol = "→";
@@ -64,13 +97,13 @@ public class BgUpdateService extends FirebaseMessagingService {
 
         if (bg < 70) {
             body = "Low BG";
-            notifyLow(title,body);
+            notifyLow(title, body);
         } else if (bg > 130) {
             body = "High BG";
-            notifyHigh(title,body);
+            notifyHigh(title, body);
         } else {
             body = "OK";
-            notifyNorm(title,body);
+            notifyNorm(title, body);
         }
 
 
@@ -97,8 +130,9 @@ public class BgUpdateService extends FirebaseMessagingService {
        /* if (bg < 130) {
             defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         }*/
+        final int soundResId = R.raw.lowalert;
 
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle,messageBody);
+        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
         notificationBuilder.setVibrate(vibrateLow)
                 .setColor(Color.RED);
         Notification bgAlert = notificationBuilder.build();
@@ -110,17 +144,18 @@ public class BgUpdateService extends FirebaseMessagingService {
     private void notifyNorm(String messageTitle, String messageBody) {
         long[] vibrateNorm = {};
 
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle,messageBody);
+        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
         notificationBuilder.setVibrate(vibrateNorm);
+        //.setSound(RingtoneManager.getDefaultUri(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT));
         //Notification bgAlert = notificationBuilder.build();
 
         sendNotification(notificationBuilder);
     }
 
     private void notifyHigh(String messageTitle, String messageBody) {
-        long[] vibrateHigh = {500,500,500,500};
+        long[] vibrateHigh = {500, 500, 500, 500};
 
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle,messageBody);
+        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
         notificationBuilder.setVibrate(vibrateHigh)
                 .setColor(Color.YELLOW);
         //Notification bgAlert = notificationBuilder.build();
