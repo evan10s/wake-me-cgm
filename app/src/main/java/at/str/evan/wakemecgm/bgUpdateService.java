@@ -90,20 +90,22 @@ public class BgUpdateService extends FirebaseMessagingService {
             case "DOUBLE_DOWN":
                 trendSymbol = "⇊";
                 break;
+            case "NOT_COMPUTABLE":
+                trendSymbol = "";
+                break;
         }
 
         String title = bg + " " + trendSymbol;
+        title.trim(); //remove the space after BG if the trend is NOT_COMPUTABLE
         String body;
 
-        if (bg < 70) {
+        //only notify for out-of-range BGs
+        if (bg < 65) {
             body = "Low BG";
             notifyLow(title, body);
-        } else if (bg > 130) {
+        } else if (bg > 240) {
             body = "High BG";
             notifyHigh(title, body);
-        } else {
-            body = "OK";
-            notifyNorm(title, body);
         }
 
 

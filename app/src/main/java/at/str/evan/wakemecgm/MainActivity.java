@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FirebaseInstanceId.getInstance().getToken();
+        String firebaseToken = FirebaseInstanceId.getInstance().getToken();
         /*final Button startServiceBtn = (Button) findViewById(R.id.start_service);
         startServiceBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
@@ -41,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
                 makeNetworkRequest(ipAdr);
             }
         });*/
+
+        final TextView firebaseTokenTextView = (TextView) findViewById(R.id.firebaseToken);
+        firebaseTokenTextView.setText(firebaseToken);
+
         final Button confirmAlertBtn = (Button) findViewById(R.id.confirm_alert);
         confirmAlertBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
