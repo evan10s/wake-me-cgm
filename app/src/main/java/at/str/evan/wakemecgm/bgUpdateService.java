@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.Ringtone;
@@ -17,6 +18,7 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Date;
 import java.util.Map;
 
 public class BgUpdateService extends FirebaseMessagingService {
@@ -39,12 +41,20 @@ public class BgUpdateService extends FirebaseMessagingService {
         mp.setLooping(false);
         mp.start();*/
 
+        //save the last received BG value
+        Context context = getApplicationContext();
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                "com.at.str.evan.wakemecgm.BG_DATA", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+
 
 
         Map<String, String> msgData = remoteMessage.getData();
         int bg = Integer.parseInt(msgData.get("latest_bg"));
         String trendVal = msgData.get("trend");
         String trendSymbol = "";
+        String bg_date = msgData.get("display_time");
 
         Runnable alertSound = new Runnable() {
             @Override
@@ -65,7 +75,7 @@ public class BgUpdateService extends FirebaseMessagingService {
 
         };
         runningAlert = new Thread (alertSound);
-        if (bg <= 65) {
+        if (bg <= 65 && bg >= 39) { //39 is the lowest reading - when CGM displays LOW, but 30 is used
             runningAlert.start();
         }
         switch (trendVal) {
@@ -95,15 +105,21 @@ public class BgUpdateService extends FirebaseMessagingService {
                 break;
         }
 
+        editor.putInt("lastBg", bg);
+        editor.putString("lastTrend",trendSymbol);
+        Log.d("WAKEMECGM", "now: " + bg_date);
+        editor.putString("lastReadingDate",bg_date);
+        editor.apply();
+
         String title = bg + " " + trendSymbol;
         title.trim(); //remove the space after BG if the trend is NOT_COMPUTABLE
         String body;
 
         //only notify for out-of-range BGs
-        if (bg < 65) {
+        if (bg < 65 && bg >= 39) {
             body = "Low BG";
             notifyLow(title, body);
-        } else if (bg > 240) {
+        } else if (bg > 210) {
             body = "High BG";
             notifyHigh(title, body);
         }
