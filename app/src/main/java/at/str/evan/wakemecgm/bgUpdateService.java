@@ -108,7 +108,7 @@ public class BgUpdateService extends FirebaseMessagingService {
         editor.putInt("lastBg", bg);
         editor.putString("lastTrend",trendSymbol);
         Log.d("WAKEMECGM", "now: " + bg_date);
-        editor.putString("lastReadingDate",bg_date);
+        editor.putString("lastReadDate",bg_date);
         editor.apply();
 
         String title = bg + " " + trendSymbol;

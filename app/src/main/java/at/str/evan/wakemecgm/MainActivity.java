@@ -1,6 +1,7 @@
 package at.str.evan.wakemecgm;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -49,10 +50,32 @@ public class MainActivity extends AppCompatActivity {
         final Button confirmAlertBtn = (Button) findViewById(R.id.confirm_alert);
         confirmAlertBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
-                BgUpdateService.runningAlert.interrupt();
+                try {
+                    BgUpdateService.runningAlert.interrupt();
+                } catch (Error e) {
+                    Log.e("WAKEMECGM","Error when confirm alert button pressed",e);
+                }
             }
         });
 
+        SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("com.at.str.evan.wakemecgm.BG_DATA",Context.MODE_PRIVATE);
+        int lastBg = sharedPref.getInt("lastBg", -1);
+        String lastTrend = sharedPref.getString("lastTrend","");
+        Log.d("WAKEMECGM", "stored prev BG: " + lastBg);
+        final TextView lastBgTextView = (TextView) findViewById(R.id.bg);
+        //Sensor stopped, latest_bg=1
+        //Sensor warm-up, latest_bg=5
+        if (lastBg == 1) {
+            lastBgTextView.setText("No data: sensor stopped.");
+        } else if (lastBg == 5) {
+            lastBgTextView.setText("No data: sensor warm-up.");
+        } else if (lastBg == 39) {
+            lastBgTextView.setText("LOW (The CGM reports 39, which should correspond to LOW)");
+        } else if (lastBg >= 40 && lastBg <= 401) {
+            lastBgTextView.setText(lastBg + lastTrend);
+        } else {
+            lastBgTextView.setText("Unhandled edge case.  FYI, the reported was " + lastBg + " with interpreted trend arrow " + lastTrend);
+        }
     }
 
     public void makeNetworkRequest(String ip) {
