@@ -2,6 +2,7 @@ package at.str.evan.wakemecgm;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -14,6 +15,17 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.LimitLine;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.ScatterData;
+import com.github.mikephil.charting.data.ScatterDataSet;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
@@ -26,6 +38,23 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
+
+class BG {
+    public float time;
+    public int bg;
+    public BG(float time, int bg) {
+        this.time = time;
+        this.bg = bg;
+
+    }
+}
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,6 +86,89 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        BGReading bg = realm.createObject(BGReading.class); // Create a new object
+        bg.setTimestamp(new Date());
+        bg.setReading(84);
+        bg.setTrend("→");
+        realm.commitTransaction();
+
+
+        RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp",new Date(System.currentTimeMillis() - 86400*1000)).findAll();
+        Log.i("WAKEMECGM",last24Hr.toString());
+        ScatterChart chart = (ScatterChart) findViewById(R.id.chart);
+
+        ArrayList<BG> dataObjects = new ArrayList<BG>();
+        int variance = 1;
+        int start = 70;
+        int dir = 1;
+        for (float i = 0; i <=255; i += 1) {
+            float t = i*24/255;
+            dataObjects.add(new BG(t,start+variance*dir));
+            if (variance > 5) {
+                variance = 1;
+                start -= 2;
+                dir *= -1;
+            }
+            start++;
+            variance++;
+        }
+
+        List<Entry> entries = new ArrayList<Entry>();
+
+        for (BG data : dataObjects) {
+
+            // turn your data into Entry objects
+            entries.add(new Entry(data.time, data.bg));
+        }
+
+        ScatterDataSet dataSet = new ScatterDataSet(entries, ""); // add entries to dataset
+        dataSet.setColor(Color.BLACK);
+        dataSet.setValueTextColor(Color.BLUE); // styling, ...
+        dataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
+        dataSet.setScatterShape(ScatterChart.ScatterShape.CIRCLE);
+        ScatterData lineData = new ScatterData(dataSet);
+        chart.setData(lineData);
+        chart.setScaleYEnabled(false);
+        chart.getLegend().setEnabled(false);
+        chart.getLegend().setForm(Legend.LegendForm.CIRCLE);
+
+        chart.getDescription().setEnabled(false);
+        chart.setVisibleXRangeMinimum(1);
+        chart.setVisibleXRangeMaximum(3);
+        chart.moveViewToX(21);
+        chart.setVisibleXRangeMaximum(24);
+        lineData.setDrawValues(false);
+
+        YAxis rightAxis = chart.getAxisRight();
+        rightAxis.setAxisMinimum(40);
+        rightAxis.setAxisMaximum(250);
+
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setEnabled(false);
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1);
+
+        LimitLine low = new LimitLine(65, "");
+        low.setLineColor(Color.RED);
+        low.setLineWidth(1f);
+        low.setTextSize(12f);
+
+        LimitLine high = new LimitLine(240, "");
+        high.setLineColor(Color.rgb(255,171,0));
+        high.setLineWidth(1f);
+        high.setTextSize(12f);
+// .. and more styling options
+
+
+
+        rightAxis.addLimitLine(low);
+        rightAxis.addLimitLine(high);
+
+        chart.invalidate(); // refresh
 
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("com.at.str.evan.wakemecgm.BG_DATA",Context.MODE_PRIVATE);
         int lastBg = sharedPref.getInt("lastBg", -1);
@@ -74,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (lastBg >= 40 && lastBg <= 401) {
             lastBgTextView.setText(lastBg + lastTrend);
         } else {
-            lastBgTextView.setText("Unhandled edge case.  FYI, the reported was " + lastBg + " with interpreted trend arrow " + lastTrend);
+            lastBgTextView.setText("Unhandled edge case: " + lastBg + " " + lastTrend);
         }
     }
 
