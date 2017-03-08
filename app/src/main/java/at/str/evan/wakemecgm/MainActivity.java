@@ -26,6 +26,7 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
+import com.github.mikephil.charting.data.realm.implementation.RealmScatterDataSet;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
@@ -117,13 +118,14 @@ public class MainActivity extends AppCompatActivity {
 
         List<Entry> entries = new ArrayList<Entry>();
 
-        for (BG data : dataObjects) {
+        for (BGReading val : last24Hr) {
 
             // turn your data into Entry objects
-            entries.add(new Entry(data.time, data.bg));
+
         }
 
-        ScatterDataSet dataSet = new ScatterDataSet(entries, ""); // add entries to dataset
+        //ScatterDataSet dataSet = new ScatterDataSet(entries, ""); // add entries to dataset
+        RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timestamp","reading");
         dataSet.setColor(Color.BLACK);
         dataSet.setValueTextColor(Color.BLUE); // styling, ...
         dataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);

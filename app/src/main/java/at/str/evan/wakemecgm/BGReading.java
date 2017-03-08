@@ -29,6 +29,7 @@ public class BGReading extends RealmObject {
         this.trend = trend;
     }
 
+    private float timeDecimal;
     private Date timestamp;
     private int reading;
     private String trend;
