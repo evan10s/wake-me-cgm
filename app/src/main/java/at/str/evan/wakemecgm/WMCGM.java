@@ -11,7 +11,7 @@ public class WMCGM extends Application {
         super.onCreate();
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder()
-                .name("bgreadings.realm").build();
+                .name("bgreadings.realm").deleteRealmIfMigrationNeeded().build();
         Realm.setDefaultConfiguration(config);
     }
 }

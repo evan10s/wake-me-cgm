@@ -21,6 +21,8 @@ import com.google.firebase.messaging.RemoteMessage;
 import java.util.Date;
 import java.util.Map;
 
+import io.realm.Realm;
+
 public class BgUpdateService extends FirebaseMessagingService {
     public static Thread runningAlert;
     public BgUpdateService() {
@@ -110,6 +112,14 @@ public class BgUpdateService extends FirebaseMessagingService {
         Log.d("WAKEMECGM", "now: " + bg_date);
         editor.putString("lastReadDate",bg_date);
         editor.apply();
+
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
+        bgReading.setTimestamp(new Date()); //TODO: use the date passed in the object
+        bgReading.setReading(bg);
+        bgReading.setTrend(trendSymbol);
+        realm.commitTransaction();
 
         String title = bg + " " + trendSymbol;
         title.trim(); //remove the space after BG if the trend is NOT_COMPUTABLE

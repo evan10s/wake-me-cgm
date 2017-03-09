@@ -87,13 +87,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        Realm realm = Realm.getDefaultInstance();
-        realm.beginTransaction();
+      Realm realm = Realm.getDefaultInstance();
+/*        realm.beginTransaction();
         BGReading bg = realm.createObject(BGReading.class); // Create a new object
         bg.setTimestamp(new Date());
-        bg.setReading(84);
+        bg.setReading(84()]);
         bg.setTrend("→");
-        realm.commitTransaction();
+        realm.commitTransaction();*/
 
 
         RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp",new Date(System.currentTimeMillis() - 86400*1000)).findAll();
@@ -124,8 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        //ScatterDataSet dataSet = new ScatterDataSet(entries, ""); // add entries to dataset
-        RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timestamp","reading");
+        RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timeDecimal","reading");
         dataSet.setColor(Color.BLACK);
         dataSet.setValueTextColor(Color.BLUE); // styling, ...
         dataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
@@ -163,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
         high.setLineColor(Color.rgb(255,171,0));
         high.setLineWidth(1f);
         high.setTextSize(12f);
-// .. and more styling options
 
 
 
