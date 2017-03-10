@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
@@ -27,6 +28,8 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.data.realm.implementation.RealmScatterDataSet;
+import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessagingService;
 
@@ -100,29 +103,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i("WAKEMECGM",last24Hr.toString());
         ScatterChart chart = (ScatterChart) findViewById(R.id.chart);
 
-        ArrayList<BG> dataObjects = new ArrayList<BG>();
-        int variance = 1;
-        int start = 70;
-        int dir = 1;
-        for (float i = 0; i <=255; i += 1) {
-            float t = i*24/255;
-            dataObjects.add(new BG(t,start+variance*dir));
-            if (variance > 5) {
-                variance = 1;
-                start -= 2;
-                dir *= -1;
-            }
-            start++;
-            variance++;
-        }
-
-        List<Entry> entries = new ArrayList<Entry>();
-
-        for (BGReading val : last24Hr) {
-
-            // turn your data into Entry objects
-
-        }
 
         RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timeDecimal","reading");
         dataSet.setColor(Color.BLACK);
@@ -136,9 +116,9 @@ public class MainActivity extends AppCompatActivity {
         chart.getLegend().setForm(Legend.LegendForm.CIRCLE);
 
         chart.getDescription().setEnabled(false);
+
         chart.setVisibleXRangeMinimum(1);
         chart.setVisibleXRangeMaximum(3);
-        chart.moveViewToX(21);
         chart.setVisibleXRangeMaximum(24);
         lineData.setDrawValues(false);
 
@@ -152,7 +132,33 @@ public class MainActivity extends AppCompatActivity {
         XAxis xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1);
+        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                int hours = (int) value;
+                int newHours = hours;
+                int minutes;
+                String AMPM = "AM";
+                if (hours > 12 && hours > 0) {
+                    newHours = hours - 12;
+                    AMPM = "PM";
+                } else if (hours == 0) {
+                    newHours = 12;
+                    AMPM = "AM";
+                } else if (hours == 12) {
+                    newHours = 12;
+                    AMPM = "PM";
+                }
+                minutes = Math.round((value - hours)*60);
 
+
+                String minuteString = (minutes < 10) ? ("0" + minutes) : "" + minutes;
+                Log.i("wake-me-cgm", "getFormattedValue: value:" + value + " " + hours + " " + minutes);
+
+                return newHours + ":" + minuteString + " " + AMPM;
+            }
+        };
+        xAxis.setValueFormatter(xAxisFormatter);
         LimitLine low = new LimitLine(65, "");
         low.setLineColor(Color.RED);
         low.setLineWidth(1f);
