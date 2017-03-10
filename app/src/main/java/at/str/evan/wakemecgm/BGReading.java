@@ -24,6 +24,7 @@ public class BGReading extends RealmObject {
         Log.i(TAG, "setTimestamp:timedec: " + timeDec);
         this.timestamp = timestamp;
         this.timeDecimal = timeDec;
+        //this.timeInSecs = (float) timestamp.getTime();
     }
 
     public float getTimeDecimal() { return timeDecimal; }
@@ -44,6 +45,11 @@ public class BGReading extends RealmObject {
         this.trend = trend;
     }
 
+  /*  public float getTimeInSecs() {
+        return timeInSecs;
+    }*/
+
+/*    private float timeInSecs;*/
     private float timeDecimal;
     private Date timestamp;
     private float reading;

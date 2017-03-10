@@ -154,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
 
                 String minuteString = (minutes < 10) ? ("0" + minutes) : "" + minutes;
                 Log.i("wake-me-cgm", "getFormattedValue: value:" + value + " " + hours + " " + minutes);
-
-                return newHours + ":" + minuteString + " " + AMPM;
+                Log.i("wake-me-cgm", "getFormattedValue: value:" + value);
+                return newHours /*+ ":" + minutes + " "*/+ " " + AMPM;
             }
         };
         xAxis.setValueFormatter(xAxisFormatter);
