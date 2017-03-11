@@ -179,7 +179,16 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("com.at.str.evan.wakemecgm.BG_DATA",Context.MODE_PRIVATE);
         int lastBg = sharedPref.getInt("lastBg", -1);
         String lastTrend = sharedPref.getString("lastTrend","");
-        Log.d("WAKEMECGM", "stored prev BG: " + lastBg);
+        long startDate = sharedPref.getLong("startDate",-1);
+        Log.d("WAKEMECGM", "stored prev BG: " + lastBg);;
+
+        if (startDate == -1) {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putLong("startDate",new Date().getTime());
+            editor.apply();
+        }
+
+
         final TextView lastBgTextView = (TextView) findViewById(R.id.bg);
         //Sensor stopped, latest_bg=1
         //Sensor warm-up, latest_bg=5

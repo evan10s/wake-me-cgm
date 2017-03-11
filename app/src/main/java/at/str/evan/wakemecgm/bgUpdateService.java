@@ -7,11 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -116,7 +114,8 @@ public class BgUpdateService extends FirebaseMessagingService {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
         BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
-        bgReading.setTimestamp(new Date()); //TODO: use the date passed in the object
+        long startDate = sharedPref.getLong("startDate",-1);
+        bgReading.setTimestamp(new Date(),startDate); //TODO: use the date passed in the object
         bgReading.setReading(bg);
         bgReading.setTrend(trendSymbol);
         realm.commitTransaction();
