@@ -1,61 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<!-- android:textIsSelectable="true" is from http://stackoverflow.com/a/5938476/5434744 and prevents keyboard from appearing when input is tapped-->
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="at.str.evan.wakemecgm.MainActivity">
-
-    <TextView
-        android:text="Waiting for server message..."
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="11dp"
-        android:id="@+id/bg"
-        android:textAppearance="@android:style/TextAppearance.Material.Large" />
+    android:layout_margin="16dp"
+    android:layout_marginTop="16dp">
 
     <com.github.mikephil.charting.charts.ScatterChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/bg"
-        android:layout_above="@+id/confirm_alert" />
-
-    <!-- android:textIsSelectable="true" is from http://stackoverflow.com/a/5938476/5434744 and prevents keyboard from appearing when input is tapped-->
-    <EditText
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="@android:style/TextAppearance.Medium"
-        android:textIsSelectable="true"
-        android:cursorVisible="false"
-        android:selectAllOnFocus="true"
-        android:inputType="textMultiLine|textNoSuggestions|textLongMessage"
-        android:id="@+id/firebaseToken"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:text="Put this value into the To: field on the server"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/getStarted"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium"
-        android:layout_above="@+id/firebaseToken"
-        android:layout_alignStart="@+id/firebaseToken" />
+        android:layout_centerHorizontal="true"
+        app:layout_constraintBottom_toTopOf="@+id/confirm_alert"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bg" />
 
     <Button
-        android:text="Confirm Alert"
+        android:id="@+id/confirm_alert"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/confirm_alert"
-        android:layout_marginBottom="33dp"
-        android:layout_above="@+id/firebaseToken"
-        android:layout_alignStart="@+id/getStarted"
-        android:layout_alignParentEnd="true" />
-</RelativeLayout>
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="5dp"
+        android:text="@string/confirm_alert"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/chart" />
+
+    <TextView
+        android:id="@+id/bg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/waiting_for_server_message"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        app:layout_constraintBottom_toTopOf="@+id/chart"
+        app:layout_constraintStart_toStartOf="@+id/chart"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</android.support.constraint.ConstraintLayout>

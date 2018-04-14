@@ -1,37 +1,36 @@
 package at.str.evan.wakemecgm;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.ScatterChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.ScatterData;
-import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.data.realm.implementation.RealmScatterDataSet;
-import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessagingService;
 
 import org.json.JSONArray;
 
@@ -42,12 +41,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 class BG {
@@ -63,46 +59,56 @@ class BG {
 public class MainActivity extends AppCompatActivity {
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String firebaseToken = FirebaseInstanceId.getInstance().getToken();
-        /*final Button startServiceBtn = (Button) findViewById(R.id.start_service);
-        startServiceBtn.setOnClickListener(new View.OnClickListener() {
-            public void onClick (View v) {
-                Log.d("WAKEMECGM",FirebaseInstanceId.getInstance().getToken());
-                final EditText ipAdrField = (EditText) findViewById(R.id.enter_ip_adr);
-                String ipAdr = ipAdrField.getText().toString(); //trim is not necessary because input doesn't allow spaces
-                makeNetworkRequest(ipAdr);
-            }
-        });*/
 
-        final TextView firebaseTokenTextView = (TextView) findViewById(R.id.firebaseToken);
-        firebaseTokenTextView.setText(firebaseToken);
+        Context context = getApplicationContext();
 
-        final Button confirmAlertBtn = (Button) findViewById(R.id.confirm_alert);
+        final Button confirmAlertBtn = findViewById(R.id.confirm_alert);
         confirmAlertBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
-                try {
+                if (BgUpdateService.runningAlert != null) {
                     BgUpdateService.runningAlert.interrupt();
-                } catch (Error e) {
-                    Log.e("WAKEMECGM","Error when confirm alert button pressed",e);
                 }
             }
         });
-      Realm realm = Realm.getDefaultInstance();
-/*        realm.beginTransaction();
-        BGReading bg = realm.createObject(BGReading.class); // Create a new object
-        bg.setTimestamp(new Date());
-        bg.setReading(84()]);
-        bg.setTrend("→");
-        realm.commitTransaction();*/
+        SharedPreferences sharedPref1 = context.getSharedPreferences(
+                "com.at.str.evan.wakemecgm.BG_DATA", Context.MODE_PRIVATE);
 
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
+        long startDate1 = sharedPref1.getLong("startDate",-1);
+        bgReading.setTimestamp(new Date(),startDate1); //TODO: use the date passed in the object
+        bgReading.setReading(106);
+        bgReading.setTrend("→");
+        realm.commitTransaction();
 
+        Log.i("WAKEMECGM", "made it here");
         RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp",new Date(System.currentTimeMillis() - 86400*1000)).findAll();
-        Log.i("WAKEMECGM",last24Hr.toString());
+        //Log.i("WAKEMECGM",last24Hr.toString());
         ScatterChart chart = (ScatterChart) findViewById(R.id.chart);
-
+        Log.i("WAKEMECGM", "made it here 2");
 
         RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timeDecimal","reading");
         dataSet.setColor(Color.BLACK);
@@ -183,9 +189,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d("WAKEMECGM", "stored prev BG: " + lastBg);;
 
         if (startDate == -1) {
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putLong("startDate",new Date().getTime());
-            editor.apply();
+            SharedPreferences.Editor editor2 = sharedPref.edit();
+            editor2.putLong("startDate",new Date().getTime());
+            editor2.apply();
         }
 
 
@@ -197,129 +203,11 @@ public class MainActivity extends AppCompatActivity {
         } else if (lastBg == 5) {
             lastBgTextView.setText("No data: sensor warm-up.");
         } else if (lastBg == 39) {
-            lastBgTextView.setText("LOW (The CGM reports 39, which should correspond to LOW)");
+            lastBgTextView.setText("LOW");
         } else if (lastBg >= 40 && lastBg <= 401) {
             lastBgTextView.setText(lastBg + lastTrend);
         } else {
             lastBgTextView.setText("Unhandled edge case: " + lastBg + " " + lastTrend);
         }
-    }
-
-    public void makeNetworkRequest(String ip) {
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            //weeeeeeeee let's do this!
-            String urlPrefix = "http://";
-            String path = "/glucose.json";
-            String url = urlPrefix + ip + path;
-            new DownloadWebpageTask().execute(url);
-        } else {
-            //poop.
-            showToast("Check your internet connection");
-        }
-    }
-
-    private class DownloadWebpageTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                Log.e("WAKEMECGM","Unable to retrieve webpage " + urls[0]);
-                return "Unable to retrieve web page.  URL may be invalid";
-            }
-        }
-        @Override
-        protected void onPostExecute(String result) {
-            processBG(Integer.parseInt(result));
-        }
-    }
-
-    private String downloadUrl(String myurl) throws IOException {
-        InputStream is = null;
-
-        int len = 500; //max characters of webpage to show
-
-        try {
-            URL url = new URL(myurl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000 /* milliseconds */);
-            conn.setConnectTimeout(15000 /* milliseconds */);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-
-            //Starts the query
-            conn.connect();
-            int response = conn.getResponseCode();
-            Log.d("WAKEMECGM","Response: " + response);
-            is = conn.getInputStream();
-
-            //Convert InputStream into a string
-            String result = readIt(is,len);
-            return result;
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-
-    }
-
-    public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        StringBuilder sb = new StringBuilder();
-
-        String line = null;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                stream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            Object result = new JSONArray(sb.toString()).getJSONObject(0).get("glucose");
-            Log.d("WAKEMECGM","Lowish");
-            return result.toString();
-
-
-        } catch (org.json.JSONException e) {
-            e.printStackTrace();
-            return "JSON error occurred";
-        }
-
-
-        /*Reader reader = null;
-        reader = new InputStreamReader(stream,"UTF-8");
-        char[] buffer = new char[160]; //this should be a slight overestimation
-        reader.read(buffer);
-        Log.d("WAKEMECGM",new String(buffer));
-        return new String(buffer);*/
-    }
-
-    private void processBG(int glucose) {
-        String glucoseString = Integer.toString(glucose);
-        if (glucose < 65) {
-            showToast("LOW BG!  Last reported: " + glucoseString);
-        } else if (glucose > 240) {
-            showToast("High BG, last reported: " + glucoseString);
-        } else {
-            showToast("BG is OK, last reported: " + glucoseString);
-        }
-    }
-
-    private void showToast(String text) {
-        Context context = getApplicationContext();
-        int duration = Toast.LENGTH_SHORT;
-        Toast.makeText(context, text, duration).show();
     }
 }

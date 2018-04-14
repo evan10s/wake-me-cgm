@@ -1,22 +1,14 @@
 package at.str.evan.wakemecgm;
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
-import org.joda.time.Duration;
-import org.joda.time.Interval;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
-import static android.content.Context.MODE_PRIVATE;
 
 public class BGReading extends RealmObject {
     private String TAG = "wake-me-cgm/bgreading";
