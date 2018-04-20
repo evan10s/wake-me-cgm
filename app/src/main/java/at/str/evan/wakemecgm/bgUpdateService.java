@@ -22,6 +22,7 @@ import java.util.Map;
 import io.realm.Realm;
 
 public class BgUpdateService extends FirebaseMessagingService {
+    final static String TAG = "WAKEMECGM";
     public static Thread runningAlert;
     public BgUpdateService() {
     }
@@ -137,6 +138,7 @@ public class BgUpdateService extends FirebaseMessagingService {
     }
 
     private NotificationCompat.Builder constructNotification(String title, String body) {
+        Log.i(TAG, "constructNotification: entered");
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* request code */, intent, PendingIntent.FLAG_UPDATE_CURRENT);
