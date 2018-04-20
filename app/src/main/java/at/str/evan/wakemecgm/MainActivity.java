@@ -96,13 +96,13 @@ public class MainActivity extends AppCompatActivity {
                 "com.at.str.evan.wakemecgm.BG_DATA", Context.MODE_PRIVATE);
 
         Realm realm = Realm.getDefaultInstance();
-        realm.beginTransaction();
-        BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
-        long startDate1 = sharedPref1.getLong("startDate",-1);
-        bgReading.setTimestamp(new Date(),startDate1); //TODO: use the date passed in the object
-        bgReading.setReading(106);
-        bgReading.setTrend("→");
-        realm.commitTransaction();
+        //realm.beginTransaction();
+        //BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
+        //long startDate1 = sharedPref1.getLong("startDate",-1);
+        //bgReading.setTimestamp(new Date(),startDate1); //TODO: use the date passed in the object
+        //bgReading.setReading(106);
+        //bgReading.setTrend("→");
+        //realm.commitTransaction();
 
         Log.i("WAKEMECGM", "made it here");
         RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp",new Date(System.currentTimeMillis() - 86400*1000)).findAll();

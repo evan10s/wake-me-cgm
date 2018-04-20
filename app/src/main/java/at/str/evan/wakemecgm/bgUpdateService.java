@@ -125,10 +125,10 @@ public class BgUpdateService extends FirebaseMessagingService {
         String body;
 
         //only notify for out-of-range BGs
-        if (bg < 65 && bg >= 39) {
+        if (bg <= 65 && bg >= 39) {
             body = "Low BG";
             notifyLow(title, body);
-        } else if (bg > 210) {
+        } else if (bg >= 240) {
             body = "High BG";
             notifyHigh(title, body);
         }

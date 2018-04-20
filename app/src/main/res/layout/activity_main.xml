@@ -13,7 +13,7 @@
     <com.github.mikephil.charting.charts.ScatterChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="208dp"
         android:layout_below="@+id/bg"
         android:layout_centerHorizontal="true"
         app:layout_constraintBottom_toTopOf="@+id/confirm_alert"
