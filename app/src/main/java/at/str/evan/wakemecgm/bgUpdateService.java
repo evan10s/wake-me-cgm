@@ -55,7 +55,6 @@ public class BgUpdateService extends FirebaseMessagingService {
 
         DateTime bgTime = new DateTime(bg_date);
         DateTime now = new DateTime();
-        DateTime fiveMinutesAgo = now.minusMinutes(5);
 
         if (bgTime.isBefore(now.minusMinutes(5))) {
             Log.i(TAG, "onMessageReceived: Ignoring old reading");
@@ -65,7 +64,6 @@ public class BgUpdateService extends FirebaseMessagingService {
         Runnable alertSound = new Runnable() {
             @Override
             public void run() {
-                Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
                 Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.lowalert));
                 Log.d("wakemecgm","running");
                 while(!Thread.interrupted()) {
