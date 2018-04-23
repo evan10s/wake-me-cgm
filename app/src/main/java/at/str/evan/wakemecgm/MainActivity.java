@@ -34,16 +34,6 @@ import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
-class BG {
-    public float time;
-    public int bg;
-    public BG(float time, int bg) {
-        this.time = time;
-        this.bg = bg;
-
-    }
-}
-
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "WAKEMECGM";
     @Override
@@ -70,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Context context = getApplicationContext();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             if (notificationManager != null) {
@@ -88,24 +76,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        SharedPreferences sharedPref1 = context.getSharedPreferences(
-                "com.at.str.evan.wakemecgm.BG_DATA", Context.MODE_PRIVATE);
 
         Realm realm = Realm.getDefaultInstance();
-        //realm.beginTransaction();
-        //BGReading bgReading = realm.createObject(BGReading.class); // Create a new object
-        //long startDate1 = sharedPref1.getLong("startDate",-1);
-        //bgReading.setTimestamp(new Date(),startDate1); //TODO: use the date passed in the object
-        //bgReading.setReading(106);
-        //bgReading.setTrend("→");
-        //realm.commitTransaction();
 
         final RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp", new Date(System.currentTimeMillis() - 86400 * 1000)).findAll();
-        //Log.i("WAKEMECGM",last24Hr.toString());
         final ScatterChart chart = findViewById(R.id.chart);
-        RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timeDecimal","reading");
+        RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<>(last24Hr, "timeDecimal", "reading");
         dataSet.setColor(Color.BLACK);
-        dataSet.setValueTextColor(Color.BLUE); // styling, ...
+        dataSet.setValueTextColor(Color.BLUE);
         dataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
         dataSet.setScatterShape(ScatterChart.ScatterShape.CIRCLE);
         ScatterData lineData = new ScatterData(dataSet);
@@ -136,9 +114,8 @@ public class MainActivity extends AppCompatActivity {
             public String getFormattedValue(float value, AxisBase axis) {
                 int hours = (int) value;
                 int newHours = hours;
-                int minutes;
                 String AMPM = "AM";
-                if (hours > 12 && hours > 0) {
+                if (hours > 12) {
                     newHours = hours - 12;
                     AMPM = "PM";
                 } else if (hours == 0) {
@@ -148,12 +125,7 @@ public class MainActivity extends AppCompatActivity {
                     newHours = 12;
                     AMPM = "PM";
                 }
-                minutes = Math.round((value - hours)*60);
 
-
-                String minuteString = (minutes < 10) ? ("0" + minutes) : "" + minutes;
-                Log.i("wake-me-cgm", "getFormattedValue: value:" + value + " " + hours + " " + minutes);
-                Log.i("wake-me-cgm", "getFormattedValue: value:" + value);
                 return newHours /*+ ":" + minutes + " "*/+ " " + AMPM;
             }
         };
@@ -188,31 +160,30 @@ public class MainActivity extends AppCompatActivity {
         RealmChangeListener<Realm> realmListener = new RealmChangeListener<Realm>() {
             @Override
             public void onChange(Realm realm) {
-                Log.i(TAG, "onChange: entered.  HELLO");
-                final TextView lastBgTextView = findViewById(R.id.bg);
                 BGReading lastBGObj = realm.where(BGReading.class).sort("timestamp").findAll().last();
+                if (lastBGObj != null) {
+                    int bg = (int) lastBGObj.getReading();
+                    String trend = lastBGObj.getTrend();
+                    Log.i(TAG, "onChange: BG reading is " + bg);
+                    Log.i(TAG, "onChange: Trend is " + trend);
 
-                int bg = (int) lastBGObj.getReading();
-                String trend = lastBGObj.getTrend();
-                Log.i(TAG, "onChange: BG reading is " + bg);
-                Log.i(TAG, "onChange: Trend is " + trend);
+                    updateBGTextView(bg, trend);
 
-                updateBGTextView(bg, trend);
-
-                chart.notifyDataSetChanged();
-                chart.invalidate();
-
+                    chart.notifyDataSetChanged();
+                    chart.invalidate();
+                }
             }
         };
         realm.addChangeListener(realmListener);
 
         updateBGTextView(lastBg, lastTrend);
-        //Sensor stopped, latest_bg=1
-        //Sensor warm-up, latest_bg=5
+
 
     }
 
     private void updateBGTextView(int bg, String trend) {
+        //Sensor stopped, latest_bg=1
+        //Sensor warm-up, latest_bg=5
         TextView lastBgTextView = findViewById(R.id.bg);
         if (bg == 1) {
             lastBgTextView.setText(R.string.sensor_stopped);
