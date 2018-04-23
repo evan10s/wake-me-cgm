@@ -1,17 +1,14 @@
 package at.str.evan.wakemecgm;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,7 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.ScatterChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -30,20 +26,12 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.realm.implementation.RealmScatterDataSet;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.google.firebase.iid.FirebaseInstanceId;
 
-import org.json.JSONArray;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Date;
+import java.util.Locale;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 class BG {
@@ -57,7 +45,7 @@ class BG {
 }
 
 public class MainActivity extends AppCompatActivity {
-
+    private final String TAG = "WAKEMECGM";
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -84,6 +72,14 @@ public class MainActivity extends AppCompatActivity {
 
         Context context = getApplicationContext();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(new NotificationChannel("HIGH_ALERTS", "High BG Alerts", NotificationManager.IMPORTANCE_HIGH));
+                notificationManager.createNotificationChannel(new NotificationChannel("LOW_ALERTS", "Low BG Alerts", NotificationManager.IMPORTANCE_HIGH));
+            }
+        }
+
         final Button confirmAlertBtn = findViewById(R.id.confirm_alert);
         confirmAlertBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick (View v) {
@@ -104,12 +100,9 @@ public class MainActivity extends AppCompatActivity {
         //bgReading.setTrend("→");
         //realm.commitTransaction();
 
-        Log.i("WAKEMECGM", "made it here");
-        RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp",new Date(System.currentTimeMillis() - 86400*1000)).findAll();
+        final RealmResults<BGReading> last24Hr = realm.where(BGReading.class).greaterThan("timestamp", new Date(System.currentTimeMillis() - 86400 * 1000)).findAll();
         //Log.i("WAKEMECGM",last24Hr.toString());
-        ScatterChart chart = (ScatterChart) findViewById(R.id.chart);
-        Log.i("WAKEMECGM", "made it here 2");
-
+        final ScatterChart chart = findViewById(R.id.chart);
         RealmScatterDataSet<BGReading> dataSet = new RealmScatterDataSet<BGReading>(last24Hr,"timeDecimal","reading");
         dataSet.setColor(Color.BLACK);
         dataSet.setValueTextColor(Color.BLUE); // styling, ...
@@ -130,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
         YAxis rightAxis = chart.getAxisRight();
         rightAxis.setAxisMinimum(40);
-        rightAxis.setAxisMaximum(250);
+        rightAxis.setAxisMaximum(400);
 
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setEnabled(false);
@@ -175,8 +168,6 @@ public class MainActivity extends AppCompatActivity {
         high.setLineWidth(1f);
         high.setTextSize(12f);
 
-
-
         rightAxis.addLimitLine(low);
         rightAxis.addLimitLine(high);
 
@@ -186,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         int lastBg = sharedPref.getInt("lastBg", -1);
         String lastTrend = sharedPref.getString("lastTrend","");
         long startDate = sharedPref.getLong("startDate",-1);
-        Log.d("WAKEMECGM", "stored prev BG: " + lastBg);;
+        Log.d("WAKEMECGM", "stored prev BG: " + lastBg);
 
         if (startDate == -1) {
             SharedPreferences.Editor editor2 = sharedPref.edit();
@@ -194,20 +185,45 @@ public class MainActivity extends AppCompatActivity {
             editor2.apply();
         }
 
+        RealmChangeListener<Realm> realmListener = new RealmChangeListener<Realm>() {
+            @Override
+            public void onChange(Realm realm) {
+                Log.i(TAG, "onChange: entered.  HELLO");
+                final TextView lastBgTextView = findViewById(R.id.bg);
+                BGReading lastBGObj = realm.where(BGReading.class).sort("timestamp").findAll().last();
 
-        final TextView lastBgTextView = (TextView) findViewById(R.id.bg);
+                int bg = (int) lastBGObj.getReading();
+                String trend = lastBGObj.getTrend();
+                Log.i(TAG, "onChange: BG reading is " + bg);
+                Log.i(TAG, "onChange: Trend is " + trend);
+
+                updateBGTextView(bg, trend);
+
+                chart.notifyDataSetChanged();
+                chart.invalidate();
+
+            }
+        };
+        realm.addChangeListener(realmListener);
+
+        updateBGTextView(lastBg, lastTrend);
         //Sensor stopped, latest_bg=1
         //Sensor warm-up, latest_bg=5
-        if (lastBg == 1) {
-            lastBgTextView.setText("No data: sensor stopped.");
-        } else if (lastBg == 5) {
-            lastBgTextView.setText("No data: sensor warm-up.");
-        } else if (lastBg == 39) {
-            lastBgTextView.setText("LOW");
-        } else if (lastBg >= 40 && lastBg <= 401) {
-            lastBgTextView.setText(lastBg + lastTrend);
+
+    }
+
+    private void updateBGTextView(int bg, String trend) {
+        TextView lastBgTextView = findViewById(R.id.bg);
+        if (bg == 1) {
+            lastBgTextView.setText(R.string.sensor_stopped);
+        } else if (bg == 5) {
+            lastBgTextView.setText(R.string.sensor_warmup);
+        } else if (bg == 39) {
+            lastBgTextView.setText(R.string.LOW);
+        } else if (bg >= 40 && bg <= 401) {
+            lastBgTextView.setText(String.format(Locale.getDefault(), "%d %s", bg, trend));
         } else {
-            lastBgTextView.setText("Unhandled edge case: " + lastBg + " " + lastTrend);
+            lastBgTextView.setText("---");
         }
     }
 }

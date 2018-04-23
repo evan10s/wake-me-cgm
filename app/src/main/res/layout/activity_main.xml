@@ -4,7 +4,6 @@
 
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="16dp"
@@ -13,7 +12,7 @@
     <com.github.mikephil.charting.charts.ScatterChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
-        android:layout_height="208dp"
+        android:layout_height="0dp"
         android:layout_below="@+id/bg"
         android:layout_centerHorizontal="true"
         app:layout_constraintBottom_toTopOf="@+id/confirm_alert"
@@ -32,7 +31,7 @@
         android:text="@string/confirm_alert"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chart" />
 
@@ -42,10 +41,12 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:text="@string/waiting_for_server_message"
+        android:text="---"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textSize="44sp"
         app:layout_constraintBottom_toTopOf="@+id/chart"
-        app:layout_constraintStart_toStartOf="@+id/chart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

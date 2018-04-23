@@ -16,6 +16,8 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.joda.time.DateTime;
+
 import java.util.Date;
 import java.util.Map;
 
@@ -33,14 +35,8 @@ public class BgUpdateService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
         Log.d("WAKEMECGM", "From: " + remoteMessage.getFrom());
-        //Vibrator vibrate = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-        //vibrate.vibrate(300);
-        Log.d("WAKEMECGM", remoteMessage.getData().toString());
 
-        //startAlertService();
-        /*MediaPlayer mp = MediaPlayer.create(this,R.raw.lowAlert);
-        mp.setLooping(false);
-        mp.start();*/
+        Log.d("WAKEMECGM", remoteMessage.getData().toString());
 
         //save the last received BG value
         Context context = getApplicationContext();
@@ -56,6 +52,15 @@ public class BgUpdateService extends FirebaseMessagingService {
         String trendVal = msgData.get("trend");
         String trendSymbol = "";
         String bg_date = msgData.get("display_time");
+
+        DateTime bgTime = new DateTime(bg_date);
+        DateTime now = new DateTime();
+        DateTime fiveMinutesAgo = now.minusMinutes(5);
+
+        if (bgTime.isBefore(now.minusMinutes(5))) {
+            Log.i(TAG, "onMessageReceived: Ignoring old reading");
+            return;
+        }
 
         Runnable alertSound = new Runnable() {
             @Override
@@ -109,6 +114,7 @@ public class BgUpdateService extends FirebaseMessagingService {
         editor.putInt("lastBg", bg);
         editor.putString("lastTrend",trendSymbol);
         Log.d("WAKEMECGM", "now: " + bg_date);
+
         editor.putString("lastReadDate",bg_date);
         editor.apply();
 
@@ -122,7 +128,7 @@ public class BgUpdateService extends FirebaseMessagingService {
         realm.commitTransaction();
 
         String title = bg + " " + trendSymbol;
-        title.trim(); //remove the space after BG if the trend is NOT_COMPUTABLE
+        title = title.trim(); //remove the space after BG if the trend is NOT_COMPUTABLE
         String body;
 
         //only notify for out-of-range BGs
@@ -137,13 +143,13 @@ public class BgUpdateService extends FirebaseMessagingService {
 
     }
 
-    private NotificationCompat.Builder constructNotification(String title, String body) {
+    private NotificationCompat.Builder constructNotification(String title, String body, String channelId) {
         Log.i(TAG, "constructNotification: entered");
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* request code */, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        return (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+        return new NotificationCompat.Builder(getApplicationContext(), channelId)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(body)
@@ -156,12 +162,7 @@ public class BgUpdateService extends FirebaseMessagingService {
     private void notifyLow(String messageTitle, String messageBody) {
         long[] vibrateLow = {400, 400, 400, 400, 400, 400};
 
-       /* if (bg < 130) {
-            defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        }*/
-        final int soundResId = R.raw.lowalert;
-
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
+        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody, "LOW_ALERTS");
         notificationBuilder.setVibrate(vibrateLow)
                 .setColor(Color.RED);
         Notification bgAlert = notificationBuilder.build();
@@ -170,30 +171,20 @@ public class BgUpdateService extends FirebaseMessagingService {
         sendNotification(notificationBuilder);
     }
 
-    private void notifyNorm(String messageTitle, String messageBody) {
-        long[] vibrateNorm = {};
-
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
-        notificationBuilder.setVibrate(vibrateNorm);
-        //.setSound(RingtoneManager.getDefaultUri(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT));
-        //Notification bgAlert = notificationBuilder.build();
-
-        sendNotification(notificationBuilder);
-    }
-
     private void notifyHigh(String messageTitle, String messageBody) {
         long[] vibrateHigh = {500, 500, 500, 500};
 
-        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody);
+        NotificationCompat.Builder notificationBuilder = constructNotification(messageTitle, messageBody, "HIGH_ALERTS");
         notificationBuilder.setVibrate(vibrateHigh)
                 .setColor(Color.YELLOW);
-        //Notification bgAlert = notificationBuilder.build();
 
         sendNotification(notificationBuilder);
     }
 
     private void sendNotification(NotificationCompat.Builder notificationBuilder) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        if (notificationManager != null) {
+            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        }
     }
 }

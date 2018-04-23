@@ -82,4 +82,9 @@
     <string name="firebase_token_settings">Firebase token</string>
     <string name="confirm_alert">Confirm Alert</string>
     <string name="waiting_for_server_message">Waiting for server message...</string>
+    <string name="alert_channel_name">Alerts</string>
+    <string name="alert_channel_description">Alerts for low and high blood sugar levels</string>
+    <string name="sensor_stopped">Sensor stopped</string>
+    <string name="sensor_warmup">Sensor warm-up in progress</string>
+    <string name="LOW">LOW</string>
 </resources>
