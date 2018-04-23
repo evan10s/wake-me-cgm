@@ -113,7 +113,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 int hours = (int) value;
+                float mins = value - hours;
                 int newHours = hours;
+                Log.i(TAG, "getFormattedValue: " + value);
+                Log.i(TAG, "getFormattedValue: " + mins);
+                int minsInt = Math.round(mins * 60);
                 String AMPM = "AM";
                 if (hours > 12) {
                     newHours = hours - 12;
@@ -126,7 +130,9 @@ public class MainActivity extends AppCompatActivity {
                     AMPM = "PM";
                 }
 
-                return newHours /*+ ":" + minutes + " "*/+ " " + AMPM;
+                String minsStr = (minsInt < 10) ? "0" + minsInt : "" + minsInt;
+
+                return newHours + ":" + minsStr + " " + AMPM;
             }
         };
         xAxis.setValueFormatter(xAxisFormatter);
