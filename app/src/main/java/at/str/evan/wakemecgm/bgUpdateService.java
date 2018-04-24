@@ -45,8 +45,6 @@ public class BgUpdateService extends FirebaseMessagingService {
 
         SharedPreferences.Editor editor = sharedPref.edit();
 
-
-
         Map<String, String> msgData = remoteMessage.getData();
         int bg = Integer.parseInt(msgData.get("latest_bg"));
         String trendVal = msgData.get("trend");
@@ -56,7 +54,7 @@ public class BgUpdateService extends FirebaseMessagingService {
         DateTime bgTime = new DateTime(bg_date);
         DateTime now = new DateTime();
 
-        if (bgTime.isBefore(now.minusMinutes(5))) {
+        if (bgTime.isBefore(now.minusMinutes(6))) {
             Log.i(TAG, "onMessageReceived: Ignoring old reading");
             return;
         }
